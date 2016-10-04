@@ -34,8 +34,9 @@ import redis.clients.jedis.JedisPoolConfig;
 
 import org.apache.commons.pool2.impl.GenericObjectPoolConfig;
 
-public class BioMapper extends Mapper<LongWritable, Text, IntWritable, LongWritable> {
-  static final int NUM_PREFIX = 13;
+public class BioMapper extends Mapper<LongWritable, Text, LongWritable, LongWritable> {
+  static final int LONG_NUM_PREFIX = 20;
+  static final int SHORT_NUM_PREFIX = 13;
 
   private static final Logger sLogger = Logger.getLogger(BioMapper.class.getName());
 
@@ -97,7 +98,7 @@ public class BioMapper extends Mapper<LongWritable, Text, IntWritable, LongWrita
 
   protected void cleanup(Context context) throws IOException, InterruptedException {
     Jedis jedis0  = new Jedis("140.109.17.134", 6379, 300000);
-    Jedis jedis1  = new Jedis("192.168.100.102", 6379, 300000);
+    Jedis jedis1  = new Jedis("192.168.100.122", 6379, 300000);
     Jedis jedis2  = new Jedis("192.168.100.112", 6379, 300000);
     Jedis jedis3  = new Jedis("192.168.100.105", 6379, 300000);
     Jedis jedis4  = new Jedis("192.168.100.106", 6379, 300000);
@@ -180,9 +181,14 @@ public class BioMapper extends Mapper<LongWritable, Text, IntWritable, LongWrita
 
       for(int i=0;i< suffix_str.length();i++){
         prefix_DNA = suffix_str.substring(i);
-        context.write(new IntWritable(profilingDNASeq(prefix_DNA, NUM_PREFIX)), new LongWritable(seqNumberAndOffset+i));
+
+        if(isLargeGrain(profilingDNASeq(prefix_DNA, LONG_NUM_PREFIX)))
+          context.write(new LongWritable(profilingDNASeq(prefix_DNA, LONG_NUM_PREFIX)), new LongWritable(seqNumberAndOffset+i));
+        else 
+          context.write(new LongWritable(encodeDNASeqInDiffGrain(prefix_DNA, SHORT_NUM_PREFIX, LONG_NUM_PREFIX)), new LongWritable(seqNumberAndOffset+i));
+        //context.write(new LongWritable(profilingDNASeq(prefix_DNA, NUM_PREFIX)), new LongWritable(seqNumberAndOffset+i));
       }
-      context.write(new IntWritable(0), new LongWritable(seqNumberAndOffset+suffix_str.length()));
+      //context.write(new LongWritable(0), new LongWritable(seqNumberAndOffset+suffix_str.length()));
 
     } catch(IOException e){
       System.out.println("Error occurs!");
@@ -191,8 +197,8 @@ public class BioMapper extends Mapper<LongWritable, Text, IntWritable, LongWrita
 
   }
 
-  private int profilingDNASeq(String seq, int num_prefix){
-    int key_for_partition = 0;
+  private long profilingDNASeq(String seq, int num_prefix){
+    long key_for_partition = 0;
 
     for(int i=0;i< Math.min(num_prefix, seq.length());i++){
       switch(seq.charAt(i)){
@@ -207,8 +213,8 @@ public class BioMapper extends Mapper<LongWritable, Text, IntWritable, LongWrita
     return key_for_partition;
   }
 
-  private int encodeDNASeqInDiffGrain(String seq, int short_prefix, int long_prefix){
-    int key_for_partition = 0;
+  private long encodeDNASeqInDiffGrain(String seq, int short_prefix, int long_prefix){
+    long key_for_partition = 0;
 
     for(int i=0;i< Math.min(short_prefix, seq.length());i++){
       switch(seq.charAt(i)){
@@ -221,6 +227,40 @@ public class BioMapper extends Mapper<LongWritable, Text, IntWritable, LongWrita
     }
 
     return key_for_partition;
+  }
+
+  private boolean isLargeGrain(long encodedPrefix){
+    //64G
+    //if(encodedPrefix == 356038411)
+    //  return true;
+  
+    //if(encodedPrefix == 559488932)
+    //  return true;
+
+    //if(encodedPrefix == 966389973)
+    //  return true;
+
+    //if(encodedPrefix == 1169840494)
+    //  return true;
+
+    //137G 20G
+    if(encodedPrefix == 75499216715494L)
+      return true;
+
+    if(encodedPrefix == 91393788655598L)
+      return true;
+
+    if(encodedPrefix == 27815500895182L)
+      return true;
+
+    if(encodedPrefix == 43710072835286L)
+      return true;
+
+    if(encodedPrefix == 47683715820312L)
+      return true;
+
+
+    return false;
   }
 
 }

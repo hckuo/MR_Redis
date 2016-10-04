@@ -43,11 +43,13 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeoutException;
 
 
-public class BioReducer extends Reducer<IntWritable, LongWritable, LongWritable, Text> {
-  static final int NUM_PREFIX = 13;
-  static final int TIME_OUT = 600000;
+public class BioReducer extends Reducer<LongWritable, LongWritable, LongWritable, Text> {
+  static final int NUM_PREFIX = 20;
+  static final int TIME_OUT = 6000000;
   static final int GROUP_SIZE = 1600000;
   static final int MGET_SUFFIX_SIZE = 100000;
+  static final long WRITE_THROUGH_PREFIX = 6103515625L;
+
   static final boolean NOT_SORT_YET = false;
   static final boolean START_TO_SORT = true;
 
@@ -192,7 +194,7 @@ public class BioReducer extends Reducer<IntWritable, LongWritable, LongWritable,
 
 
     this.pool_0  = new JedisPool(this.jpc_0, "140.109.17.134", 6379, TIME_OUT);
-    this.pool_1  = new JedisPool(this.jpc_1, "192.168.100.102", 6379, TIME_OUT);
+    this.pool_1  = new JedisPool(this.jpc_1, "192.168.100.122", 6379, TIME_OUT);
     this.pool_2  = new JedisPool(this.jpc_2, "192.168.100.112", 6379, TIME_OUT);
     this.pool_3  = new JedisPool(this.jpc_3, "192.168.100.105", 6379, TIME_OUT);
     this.pool_4  = new JedisPool(this.jpc_4, "192.168.100.106", 6379, TIME_OUT);
@@ -288,7 +290,7 @@ public class BioReducer extends Reducer<IntWritable, LongWritable, LongWritable,
   }
 
     @Override
-    public void reduce(IntWritable key, Iterable<LongWritable> values, Context context) throws IOException, InterruptedException {
+    public void reduce(LongWritable key, Iterable<LongWritable> values, Context context) throws IOException, InterruptedException {
       /*** initialize the jedis connections***/
       if(this.Redis_Connection){
         this.jedis0 = this.pool_0.getResource();
@@ -322,17 +324,18 @@ public class BioReducer extends Reducer<IntWritable, LongWritable, LongWritable,
 
       int reduce_group_size = 0;
       
-      if(key.get() == 0){
+      if(key.get() == 0L){
         StringBuilder tmp_suffix_offset = new StringBuilder("$ ");
+        //StringBuilder tmp_suffix_offset = new StringBuilder();
         for(LongWritable value: values){
           offset = (int)(value.get()%1000L);
           tmp_suffix_offset.append(offset);
-          //context.write(new LongWritable((value.get()-offset)/1000L), new Text(tmp_suffix_offset.toString()));
           this.seqNumber.set((value.get()-offset)/1000L);
           this.suffixOffset.set(tmp_suffix_offset.toString());
           context.write(this.seqNumber, this.suffixOffset);
 
           tmp_suffix_offset.delete(2, tmp_suffix_offset.length());
+          //tmp_suffix_offset.delete(0, tmp_suffix_offset.length());
           reduce_group_size++;
         }
       }
@@ -374,7 +377,8 @@ public class BioReducer extends Reducer<IntWritable, LongWritable, LongWritable,
           this.get_size = 0;
         }
       }
-      else if(key.get()%78125 == 0){
+      //else if(key.get()%78125L == 0){
+      else if(key.get()%WRITE_THROUGH_PREFIX == 0){
         /*** process the accumulated suffixes to preserve the order ***/
         if(this.get_size > 0){
           batchProcess(context, START_TO_SORT);
@@ -391,6 +395,7 @@ public class BioReducer extends Reducer<IntWritable, LongWritable, LongWritable,
 
           this.seqNumber.set((value.get()-offset)/1000L);
           this.suffixOffset.set(tmp_suffix_offset.toString());
+          //this.suffixOffset.set(String.valueOf(offset));
           context.write(this.seqNumber, this.suffixOffset);
 
           tmp_suffix_offset.delete(decoded_prefix.length(), tmp_suffix_offset.length());
@@ -575,6 +580,7 @@ public class BioReducer extends Reducer<IntWritable, LongWritable, LongWritable,
         element.seqNo = Long.valueOf(bulkOfKeys.get(j)).longValue();
         element.offset = bulkOfOffsets.get(j).intValue();
 
+        sLogger.info("Fucking key: "+bulkOfKeys.get(j)+" offset: "+bulkOfOffsets.get(j).intValue()+"  value: "+bulkOfValues.get(j));
         StringBuilder buffer = new StringBuilder(bulkOfValues.get(j));
         buffer.append("$");
         element.suffix = buffer.toString();
@@ -670,6 +676,7 @@ public class BioReducer extends Reducer<IntWritable, LongWritable, LongWritable,
         for(SeqNoSuffixOffset item: this.sortedSuffix){
           this.seqNumber.set(item.seqNo);
           this.suffixOffset.set(item.toString());
+          //this.suffixOffset.set(String.valueOf(item.offset));
           context.write(this.seqNumber, this.suffixOffset);
         }
           	
@@ -680,19 +687,36 @@ public class BioReducer extends Reducer<IntWritable, LongWritable, LongWritable,
       
     }
 
-    private boolean isLargeGrain(int encodedPrefix){
-      //13 chars
-      if(encodedPrefix == 356038411)
-        return true;
+    private boolean isLargeGrain(long encodedPrefix){
+      //64G
+      //if(encodedPrefix == 356038411)
+      //  return true;
     
-      if(encodedPrefix == 559488932)
+      //if(encodedPrefix == 559488932)
+      //  return true;
+
+      //if(encodedPrefix == 966389973)
+      //  return true;
+
+      //if(encodedPrefix == 1169840494)
+      //  return true;
+
+      //137G 20G
+      if(encodedPrefix == 75499216715494L)
         return true;
 
-      if(encodedPrefix == 966389973)
+      if(encodedPrefix == 91393788655598L)
         return true;
 
-      if(encodedPrefix == 1169840494)
+      if(encodedPrefix == 27815500895182L)
         return true;
+
+      if(encodedPrefix == 43710072835286L)
+        return true;
+
+      if(encodedPrefix == 47683715820312L)
+        return true;
+
 
       return false;
     }

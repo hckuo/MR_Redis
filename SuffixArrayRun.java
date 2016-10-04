@@ -31,8 +31,8 @@ public class SuffixArrayRun{
         job.setJarByClass(SuffixArrayRun.class);
      
         job.setMapperClass(BioMapper.class);
-        job.setMapOutputKeyClass(IntWritable.class);
-        //job.setMapOutputKeyClass(LongWritable.class);
+        //job.setMapOutputKeyClass(IntWritable.class);
+        job.setMapOutputKeyClass(LongWritable.class);
         job.setMapOutputValueClass(LongWritable.class);
 
         job.setReducerClass(BioReducer.class);
