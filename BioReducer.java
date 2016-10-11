@@ -44,11 +44,13 @@ import java.util.concurrent.TimeoutException;
 
 
 public class BioReducer extends Reducer<LongWritable, LongWritable, LongWritable, Text> {
-  static final int NUM_PREFIX = 20;
+  static final int NUM_PREFIX = 23;
   static final int TIME_OUT = 6000000;
   static final int GROUP_SIZE = 1600000;
   static final int MGET_SUFFIX_SIZE = 100000;
-  static final long WRITE_THROUGH_PREFIX = 6103515625L;
+  static final long WRITE_THROUGH_PREFIX = 762939453125L;
+
+  static final int NUM_COMPRESS_CHARS = 3;
 
   static final boolean NOT_SORT_YET = false;
   static final boolean START_TO_SORT = true;
@@ -257,6 +259,7 @@ public class BioReducer extends Reducer<LongWritable, LongWritable, LongWritable
     for(int i=0;i<16;i++)
       this.scramble_order.add(new Integer(i));
 
+    System.out.println("hhwu FUCKING SETUP HERE!!!!");
   }
 
   @Override
@@ -325,8 +328,8 @@ public class BioReducer extends Reducer<LongWritable, LongWritable, LongWritable
       int reduce_group_size = 0;
       
       if(key.get() == 0L){
-        StringBuilder tmp_suffix_offset = new StringBuilder("$ ");
-        //StringBuilder tmp_suffix_offset = new StringBuilder();
+        //StringBuilder tmp_suffix_offset = new StringBuilder("$ ");
+        StringBuilder tmp_suffix_offset = new StringBuilder();
         for(LongWritable value: values){
           offset = (int)(value.get()%1000L);
           tmp_suffix_offset.append(offset);
@@ -334,8 +337,8 @@ public class BioReducer extends Reducer<LongWritable, LongWritable, LongWritable
           this.suffixOffset.set(tmp_suffix_offset.toString());
           context.write(this.seqNumber, this.suffixOffset);
 
-          tmp_suffix_offset.delete(2, tmp_suffix_offset.length());
-          //tmp_suffix_offset.delete(0, tmp_suffix_offset.length());
+          //tmp_suffix_offset.delete(2, tmp_suffix_offset.length());
+          tmp_suffix_offset.delete(0, tmp_suffix_offset.length());
           reduce_group_size++;
         }
       }
@@ -394,8 +397,8 @@ public class BioReducer extends Reducer<LongWritable, LongWritable, LongWritable
           tmp_suffix_offset.append(offset);
 
           this.seqNumber.set((value.get()-offset)/1000L);
-          this.suffixOffset.set(tmp_suffix_offset.toString());
-          //this.suffixOffset.set(String.valueOf(offset));
+          //this.suffixOffset.set(tmp_suffix_offset.toString());
+          this.suffixOffset.set(String.valueOf(offset));
           context.write(this.seqNumber, this.suffixOffset);
 
           tmp_suffix_offset.delete(decoded_prefix.length(), tmp_suffix_offset.length());
@@ -574,14 +577,16 @@ public class BioReducer extends Reducer<LongWritable, LongWritable, LongWritable
       String seqNo;
 
       SeqNoSuffixOffset element;
+      String decompressed_read;
 
       for(int j=0;j<bulkOfKeys.size();j++){
         element = new SeqNoSuffixOffset();
         element.seqNo = Long.valueOf(bulkOfKeys.get(j)).longValue();
         element.offset = bulkOfOffsets.get(j).intValue();
 
-        sLogger.info("Fucking key: "+bulkOfKeys.get(j)+" offset: "+bulkOfOffsets.get(j).intValue()+"  value: "+bulkOfValues.get(j));
-        StringBuilder buffer = new StringBuilder(bulkOfValues.get(j));
+        //sLogger.info("Fucking key: "+bulkOfKeys.get(j)+" offset: "+bulkOfOffsets.get(j).intValue()+"  value: "+bulkOfValues.get(j));
+        decompressed_read = decompressing(bulkOfValues.get(j));
+        StringBuilder buffer = new StringBuilder(decompressed_read.substring(element.offset%NUM_COMPRESS_CHARS));
         buffer.append("$");
         element.suffix = buffer.toString();
 
@@ -675,8 +680,8 @@ public class BioReducer extends Reducer<LongWritable, LongWritable, LongWritable
  
         for(SeqNoSuffixOffset item: this.sortedSuffix){
           this.seqNumber.set(item.seqNo);
-          this.suffixOffset.set(item.toString());
-          //this.suffixOffset.set(String.valueOf(item.offset));
+          //this.suffixOffset.set(item.toString());
+          this.suffixOffset.set(String.valueOf(item.offset));
           context.write(this.seqNumber, this.suffixOffset);
         }
           	
@@ -701,24 +706,11 @@ public class BioReducer extends Reducer<LongWritable, LongWritable, LongWritable
       //if(encodedPrefix == 1169840494)
       //  return true;
 
-      //137G 20G
-      if(encodedPrefix == 75499216715494L)
+      //137G 23 chars
+      if(encodedPrefix%9765625L != 0L)
         return true;
-
-      if(encodedPrefix == 91393788655598L)
-        return true;
-
-      if(encodedPrefix == 27815500895182L)
-        return true;
-
-      if(encodedPrefix == 43710072835286L)
-        return true;
-
-      if(encodedPrefix == 47683715820312L)
-        return true;
-
-
-      return false;
+      else
+        return false;
     }
 
     public static List<String> mGetSuffix(List<String> keys, List<Integer> starts, Jedis jedis) {
@@ -726,10 +718,51 @@ public class BioReducer extends Reducer<LongWritable, LongWritable, LongWritable
 
       long [] suffix_start = new long[keys.size()];
       for(int i=0;i<keys.size();i++)
-        suffix_start[i] = starts.get(i).longValue();
+        suffix_start[i] = starts.get(i).longValue()/NUM_COMPRESS_CHARS;
 
       return jedis.mgetsuffix(keys.toArray(new String[0]), suffix_start);
       
     }
+
+    private String decompressing(String seq){
+      StringBuilder decompressed_read = new StringBuilder();
+
+      for(int i=0;i< seq.length();i++)
+        decompressed_read.append(decodeChar((int)seq.charAt(i)));
+
+      return decompressed_read.toString();
+    }
+
+
+    private String decodeChar(int int_char){
+      int digit;
+      StringBuilder buffer = new StringBuilder();
+
+      for(int i=1;i< NUM_COMPRESS_CHARS;i++){
+        digit = int_char % 5;
+
+        switch(digit){
+          case 1: buffer.insert(0,"A"); break;
+          case 2: buffer.insert(0,"C"); break;
+          case 3: buffer.insert(0,"G"); break;
+          case 4: buffer.insert(0,"T"); break;
+          default: break;
+        }
+
+        int_char -= digit;
+        int_char = int_char/5;
+      }
+
+      switch(int_char){
+        case 1: buffer.insert(0,"A"); break;
+        case 2: buffer.insert(0,"C"); break;
+        case 3: buffer.insert(0,"G"); break;
+        case 4: buffer.insert(0,"T"); break;
+        default: break;
+      }
+
+      return buffer.toString();
+    }
+
 
 }

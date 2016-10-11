@@ -35,8 +35,9 @@ import redis.clients.jedis.JedisPoolConfig;
 import org.apache.commons.pool2.impl.GenericObjectPoolConfig;
 
 public class BioMapper extends Mapper<LongWritable, Text, LongWritable, LongWritable> {
-  static final int LONG_NUM_PREFIX = 20;
+  static final int LONG_NUM_PREFIX = 23;
   static final int SHORT_NUM_PREFIX = 13;
+  static final int NUM_COMPRESS_CHARS = 3;
 
   private static final Logger sLogger = Logger.getLogger(BioMapper.class.getName());
 
@@ -154,22 +155,22 @@ public class BioMapper extends Mapper<LongWritable, Text, LongWritable, LongWrit
 
 
     switch(sel){
-      case 1:  bulkOfKeys_1.add(seqId); bulkOfKeys_1.add(result[1]);break;
-      case 2:  bulkOfKeys_2.add(seqId); bulkOfKeys_2.add(result[1]);break;
-      case 3:  bulkOfKeys_3.add(seqId); bulkOfKeys_3.add(result[1]);break;
-      case 4:  bulkOfKeys_4.add(seqId); bulkOfKeys_4.add(result[1]);break;
-      case 5:  bulkOfKeys_5.add(seqId); bulkOfKeys_5.add(result[1]);break;
-      case 6:  bulkOfKeys_6.add(seqId); bulkOfKeys_6.add(result[1]);break;
-      case 7:  bulkOfKeys_7.add(seqId); bulkOfKeys_7.add(result[1]);break;
-      case 8:  bulkOfKeys_8.add(seqId); bulkOfKeys_8.add(result[1]);break;
-      case 9:  bulkOfKeys_9.add(seqId); bulkOfKeys_9.add(result[1]);break;
-      case 10: bulkOfKeys_10.add(seqId); bulkOfKeys_10.add(result[1]);break;
-      case 11: bulkOfKeys_11.add(seqId); bulkOfKeys_11.add(result[1]);break;
-      case 12: bulkOfKeys_12.add(seqId); bulkOfKeys_12.add(result[1]);break;
-      case 13: bulkOfKeys_13.add(seqId); bulkOfKeys_13.add(result[1]);break;
-      case 14: bulkOfKeys_14.add(seqId); bulkOfKeys_14.add(result[1]);break;
-      case 15: bulkOfKeys_15.add(seqId); bulkOfKeys_15.add(result[1]);break;
-      default: bulkOfKeys_0.add(seqId); bulkOfKeys_0.add(result[1]);break;
+      case 1:  bulkOfKeys_1.add(seqId); bulkOfKeys_1.add(compressDNASeq(result[1]));break;
+      case 2:  bulkOfKeys_2.add(seqId); bulkOfKeys_2.add(compressDNASeq(result[1]));break;
+      case 3:  bulkOfKeys_3.add(seqId); bulkOfKeys_3.add(compressDNASeq(result[1]));break;
+      case 4:  bulkOfKeys_4.add(seqId); bulkOfKeys_4.add(compressDNASeq(result[1]));break;
+      case 5:  bulkOfKeys_5.add(seqId); bulkOfKeys_5.add(compressDNASeq(result[1]));break;
+      case 6:  bulkOfKeys_6.add(seqId); bulkOfKeys_6.add(compressDNASeq(result[1]));break;
+      case 7:  bulkOfKeys_7.add(seqId); bulkOfKeys_7.add(compressDNASeq(result[1]));break;
+      case 8:  bulkOfKeys_8.add(seqId); bulkOfKeys_8.add(compressDNASeq(result[1]));break;
+      case 9:  bulkOfKeys_9.add(seqId); bulkOfKeys_9.add(compressDNASeq(result[1]));break;
+      case 10: bulkOfKeys_10.add(seqId); bulkOfKeys_10.add(compressDNASeq(result[1]));break;
+      case 11: bulkOfKeys_11.add(seqId); bulkOfKeys_11.add(compressDNASeq(result[1]));break;
+      case 12: bulkOfKeys_12.add(seqId); bulkOfKeys_12.add(compressDNASeq(result[1]));break;
+      case 13: bulkOfKeys_13.add(seqId); bulkOfKeys_13.add(compressDNASeq(result[1]));break;
+      case 14: bulkOfKeys_14.add(seqId); bulkOfKeys_14.add(compressDNASeq(result[1]));break;
+      case 15: bulkOfKeys_15.add(seqId); bulkOfKeys_15.add(compressDNASeq(result[1]));break;
+      default: bulkOfKeys_0.add(seqId); bulkOfKeys_0.add(compressDNASeq(result[1]));break;
     }
 
     
@@ -182,7 +183,7 @@ public class BioMapper extends Mapper<LongWritable, Text, LongWritable, LongWrit
       for(int i=0;i< suffix_str.length();i++){
         prefix_DNA = suffix_str.substring(i);
 
-        if(isLargeGrain(profilingDNASeq(prefix_DNA, LONG_NUM_PREFIX)))
+        if(isLargeGrain(profilingDNASeq(prefix_DNA, SHORT_NUM_PREFIX)))
           context.write(new LongWritable(profilingDNASeq(prefix_DNA, LONG_NUM_PREFIX)), new LongWritable(seqNumberAndOffset+i));
         else 
           context.write(new LongWritable(encodeDNASeqInDiffGrain(prefix_DNA, SHORT_NUM_PREFIX, LONG_NUM_PREFIX)), new LongWritable(seqNumberAndOffset+i));
@@ -243,24 +244,41 @@ public class BioMapper extends Mapper<LongWritable, Text, LongWritable, LongWrit
     //if(encodedPrefix == 1169840494)
     //  return true;
 
-    //137G 20G
-    if(encodedPrefix == 75499216715494L)
+    //137G 13 chars
+    if(encodedPrefix == 966389973L)
       return true;
-
-    if(encodedPrefix == 91393788655598L)
+    if(encodedPrefix == 406901041L)
       return true;
-
-    if(encodedPrefix == 27815500895182L)
+    if(encodedPrefix == 610351562L)
       return true;
-
-    if(encodedPrefix == 43710072835286L)
+    if(encodedPrefix == 1118977864L)
       return true;
-
-    if(encodedPrefix == 47683715820312L)
+    if(encodedPrefix == 457763671L)
+      return true;
+    if(encodedPrefix == 356038411L)
+      return true;
+    if(encodedPrefix == 813802083L)
+      return true;
+    if(encodedPrefix == 559488932L)
+      return true;
+    if(encodedPrefix == 1220703124L)
+      return true;
+    if(encodedPrefix == 712076822L)
+      return true;
+    if(encodedPrefix == 1169840494L)
       return true;
 
 
     return false;
+  }
+
+  private String compressDNASeq(String seq){
+    StringBuilder compressed_read = new StringBuilder();
+
+    for(int i=0;i< seq.length();i+=NUM_COMPRESS_CHARS)
+      compressed_read.append((char)profilingDNASeq(seq.substring(i,Math.min(i+NUM_COMPRESS_CHARS, seq.length())),NUM_COMPRESS_CHARS));
+
+    return compressed_read.toString();
   }
 
 }
