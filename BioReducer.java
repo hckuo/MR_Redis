@@ -342,44 +342,44 @@ public class BioReducer extends Reducer<LongWritable, LongWritable, LongWritable
           reduce_group_size++;
         }
       }
-      else if(isLargeGrain(key.get()) ){
-        /*** process the accumulated suffixes to preserve the order ***/
-        if(this.get_size > 0){
-          batchProcess(context, START_TO_SORT);
-          this.get_size = 0;
-        }
+      //else if(isLargeGrain(key.get()) ){
+      //  /*** process the accumulated suffixes to preserve the order ***/
+      //  if(this.get_size > 0){
+      //    batchProcess(context, START_TO_SORT);
+      //    this.get_size = 0;
+      //  }
 
 
-        StringBuilder suffix_offset;
+      //  StringBuilder suffix_offset;
 
-        boolean multiple_get = false;
-        for(LongWritable value: values){
-          offset = (int)(value.get()%1000L);
-          mem_key = new Long((value.get()-offset)/1000L);
-          
-          dispatchKeyValuePair(mem_key, new Integer(offset));
-          
-          reduce_group_size++;
-          this.get_size++;
+      //  boolean multiple_get = false;
+      //  for(LongWritable value: values){
+      //    offset = (int)(value.get()%1000L);
+      //    mem_key = new Long((value.get()-offset)/1000L);
+      //    
+      //    dispatchKeyValuePair(mem_key, new Integer(offset));
+      //    
+      //    reduce_group_size++;
+      //    this.get_size++;
  
-          if(this.get_size > GROUP_SIZE){
-            batchProcess(context, NOT_SORT_YET);
-            this.get_size = 0;
-            multiple_get = true;
-          }
+      //    if(this.get_size > GROUP_SIZE){
+      //      batchProcess(context, NOT_SORT_YET);
+      //      this.get_size = 0;
+      //      multiple_get = true;
+      //    }
 
-        }
+      //  }
 
-        //outlier of reduce group
-        //if(reduce_group_size > GROUP_SIZE)
-        //  sLogger.info("Key "+decodePrefix(key.get(), NUM_PREFIX)+"for Reduce group size: "+reduce_group_size);
+      //  //outlier of reduce group
+      //  //if(reduce_group_size > GROUP_SIZE)
+      //  //  sLogger.info("Key "+decodePrefix(key.get(), NUM_PREFIX)+"for Reduce group size: "+reduce_group_size);
 
-                
-        if(multiple_get){
-          batchProcess(context, START_TO_SORT);
-          this.get_size = 0;
-        }
-      }
+      //          
+      //  if(multiple_get){
+      //    batchProcess(context, START_TO_SORT);
+      //    this.get_size = 0;
+      //  }
+      //}
       //else if(key.get()%78125L == 0){
       else if(key.get()%WRITE_THROUGH_PREFIX == 0){
         /*** process the accumulated suffixes to preserve the order ***/
