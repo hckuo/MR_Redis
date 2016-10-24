@@ -5,6 +5,7 @@ import org.apache.hadoop.mapreduce.Mapper;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.ArrayList;
+import java.math.BigInteger;
 
 // for log4j system
 import org.apache.log4j.Logger;
@@ -75,6 +76,9 @@ public class BioMapper extends Mapper<LongWritable, Text, LongWritable, LongWrit
   private ArrayList <String> bulkOfKeys_14;
   private ArrayList <String> bulkOfKeys_15;
 
+  //to reolve the precision problem of Math.pow
+  private BigInteger base_five = BigInteger.valueOf(5);
+
   @Override
   protected void setup(Context context) throws IOException, InterruptedException {
     this.bulkOfKeys_0 = new ArrayList<String>();
@@ -105,7 +109,7 @@ public class BioMapper extends Mapper<LongWritable, Text, LongWritable, LongWrit
     Jedis jedis4  = new Jedis("192.168.100.106", 6379, 300000);
     Jedis jedis5  = new Jedis("192.168.100.107", 6379, 300000);
     Jedis jedis6  = new Jedis("192.168.100.118", 6379, 300000);
-    Jedis jedis7  = new Jedis("192.168.100.109", 6379, 300000);
+    Jedis jedis7  = new Jedis("192.168.100.102", 6379, 300000);
     Jedis jedis8  = new Jedis("192.168.100.110", 6379, 300000);
     Jedis jedis9  = new Jedis("192.168.100.111", 6379, 300000);
     Jedis jedis10 = new Jedis("192.168.100.119", 6379, 300000);
@@ -155,22 +159,22 @@ public class BioMapper extends Mapper<LongWritable, Text, LongWritable, LongWrit
 
 
     switch(sel){
-      case 1:  bulkOfKeys_1.add(seqId); bulkOfKeys_1.add(compressDNASeq(result[1]));break;
-      case 2:  bulkOfKeys_2.add(seqId); bulkOfKeys_2.add(compressDNASeq(result[1]));break;
-      case 3:  bulkOfKeys_3.add(seqId); bulkOfKeys_3.add(compressDNASeq(result[1]));break;
-      case 4:  bulkOfKeys_4.add(seqId); bulkOfKeys_4.add(compressDNASeq(result[1]));break;
-      case 5:  bulkOfKeys_5.add(seqId); bulkOfKeys_5.add(compressDNASeq(result[1]));break;
-      case 6:  bulkOfKeys_6.add(seqId); bulkOfKeys_6.add(compressDNASeq(result[1]));break;
-      case 7:  bulkOfKeys_7.add(seqId); bulkOfKeys_7.add(compressDNASeq(result[1]));break;
-      case 8:  bulkOfKeys_8.add(seqId); bulkOfKeys_8.add(compressDNASeq(result[1]));break;
-      case 9:  bulkOfKeys_9.add(seqId); bulkOfKeys_9.add(compressDNASeq(result[1]));break;
-      case 10: bulkOfKeys_10.add(seqId); bulkOfKeys_10.add(compressDNASeq(result[1]));break;
-      case 11: bulkOfKeys_11.add(seqId); bulkOfKeys_11.add(compressDNASeq(result[1]));break;
-      case 12: bulkOfKeys_12.add(seqId); bulkOfKeys_12.add(compressDNASeq(result[1]));break;
-      case 13: bulkOfKeys_13.add(seqId); bulkOfKeys_13.add(compressDNASeq(result[1]));break;
-      case 14: bulkOfKeys_14.add(seqId); bulkOfKeys_14.add(compressDNASeq(result[1]));break;
-      case 15: bulkOfKeys_15.add(seqId); bulkOfKeys_15.add(compressDNASeq(result[1]));break;
-      default: bulkOfKeys_0.add(seqId); bulkOfKeys_0.add(compressDNASeq(result[1]));break;
+      case 1:  bulkOfKeys_1.add(seqId); bulkOfKeys_1.add(result[1]);break;
+      case 2:  bulkOfKeys_2.add(seqId); bulkOfKeys_2.add(result[1]);break;
+      case 3:  bulkOfKeys_3.add(seqId); bulkOfKeys_3.add(result[1]);break;
+      case 4:  bulkOfKeys_4.add(seqId); bulkOfKeys_4.add(result[1]);break;
+      case 5:  bulkOfKeys_5.add(seqId); bulkOfKeys_5.add(result[1]);break;
+      case 6:  bulkOfKeys_6.add(seqId); bulkOfKeys_6.add(result[1]);break;
+      case 7:  bulkOfKeys_7.add(seqId); bulkOfKeys_7.add(result[1]);break;
+      case 8:  bulkOfKeys_8.add(seqId); bulkOfKeys_8.add(result[1]);break;
+      case 9:  bulkOfKeys_9.add(seqId); bulkOfKeys_9.add(result[1]);break;
+      case 10: bulkOfKeys_10.add(seqId); bulkOfKeys_10.add(result[1]);break;
+      case 11: bulkOfKeys_11.add(seqId); bulkOfKeys_11.add(result[1]);break;
+      case 12: bulkOfKeys_12.add(seqId); bulkOfKeys_12.add(result[1]);break;
+      case 13: bulkOfKeys_13.add(seqId); bulkOfKeys_13.add(result[1]);break;
+      case 14: bulkOfKeys_14.add(seqId); bulkOfKeys_14.add(result[1]);break;
+      case 15: bulkOfKeys_15.add(seqId); bulkOfKeys_15.add(result[1]);break;
+      default: bulkOfKeys_0.add(seqId); bulkOfKeys_0.add(result[1]);break;
     }
 
     
@@ -203,10 +207,10 @@ public class BioMapper extends Mapper<LongWritable, Text, LongWritable, LongWrit
 
     for(int i=0;i< Math.min(num_prefix, seq.length());i++){
       switch(seq.charAt(i)){
-        case 'A': key_for_partition += Math.pow(5, num_prefix-1-i); break;
-        case 'C': key_for_partition += 2*Math.pow(5,  num_prefix-1-i); break;
-        case 'G': key_for_partition += 3*Math.pow(5,  num_prefix-1-i); break;
-        case 'T': key_for_partition += 4*Math.pow(5,  num_prefix-1-i); break;
+        case 'A': key_for_partition += this.base_five.pow(num_prefix-1-i).longValue(); break;
+        case 'C': key_for_partition += 2*this.base_five.pow(num_prefix-1-i).longValue(); break;
+        case 'G': key_for_partition += 3*this.base_five.pow(num_prefix-1-i).longValue(); break;
+        case 'T': key_for_partition += 4*this.base_five.pow(num_prefix-1-i).longValue(); break;
         default: break;
       }
     }
@@ -219,10 +223,10 @@ public class BioMapper extends Mapper<LongWritable, Text, LongWritable, LongWrit
 
     for(int i=0;i< Math.min(short_prefix, seq.length());i++){
       switch(seq.charAt(i)){
-        case 'A': key_for_partition += Math.pow(5, long_prefix-1-i); break;
-        case 'C': key_for_partition += 2*Math.pow(5,  long_prefix-1-i); break;
-        case 'G': key_for_partition += 3*Math.pow(5,  long_prefix-1-i); break;
-        case 'T': key_for_partition += 4*Math.pow(5,  long_prefix-1-i); break;
+        case 'A': key_for_partition += this.base_five.pow(long_prefix-1-i).longValue(); break;
+        case 'C': key_for_partition += 2*this.base_five.pow(long_prefix-1-i).longValue(); break;
+        case 'G': key_for_partition += 3*this.base_five.pow(long_prefix-1-i).longValue(); break;
+        case 'T': key_for_partition += 4*this.base_five.pow(long_prefix-1-i).longValue(); break;
         default: break;
       }
     }
@@ -247,24 +251,34 @@ public class BioMapper extends Mapper<LongWritable, Text, LongWritable, LongWrit
     //137G 13 chars
     if(encodedPrefix == 966389973L)
       return true;
+
     if(encodedPrefix == 406901041L)
       return true;
+
     if(encodedPrefix == 610351562L)
       return true;
+
     if(encodedPrefix == 1118977864L)
       return true;
+
     if(encodedPrefix == 457763671L)
       return true;
+
     if(encodedPrefix == 356038411L)
       return true;
+
     if(encodedPrefix == 813802083L)
       return true;
+
     if(encodedPrefix == 559488932L)
       return true;
+
     if(encodedPrefix == 1220703124L)
       return true;
+
     if(encodedPrefix == 712076822L)
       return true;
+
     if(encodedPrefix == 1169840494L)
       return true;
 
@@ -272,13 +286,5 @@ public class BioMapper extends Mapper<LongWritable, Text, LongWritable, LongWrit
     return false;
   }
 
-  private String compressDNASeq(String seq){
-    StringBuilder compressed_read = new StringBuilder();
-
-    for(int i=0;i< seq.length();i+=NUM_COMPRESS_CHARS)
-      compressed_read.append((char)profilingDNASeq(seq.substring(i,Math.min(i+NUM_COMPRESS_CHARS, seq.length())),NUM_COMPRESS_CHARS));
-
-    return compressed_read.toString();
-  }
 
 }

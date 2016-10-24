@@ -48,7 +48,10 @@ public class BioReducer extends Reducer<LongWritable, LongWritable, LongWritable
   static final int TIME_OUT = 6000000;
   static final int GROUP_SIZE = 1600000;
   static final int MGET_SUFFIX_SIZE = 100000;
-  static final long WRITE_THROUGH_PREFIX = 762939453125L;
+  //static final long WRITE_THROUGH_PREFIX = 762939453125L;
+  //static final long WRITE_THROUGH_PREFIX = 19073486328125L;
+  static final long WRITE_THROUGH_PREFIX = (long)Math.pow(5, 17);
+  static final long LARGE_GRAIN_THRESHOLD = (long)Math.pow(5, 10);
 
   static final int NUM_COMPRESS_CHARS = 3;
 
@@ -202,7 +205,7 @@ public class BioReducer extends Reducer<LongWritable, LongWritable, LongWritable
     this.pool_4  = new JedisPool(this.jpc_4, "192.168.100.106", 6379, TIME_OUT);
     this.pool_5  = new JedisPool(this.jpc_5, "192.168.100.107", 6379, TIME_OUT);
     this.pool_6  = new JedisPool(this.jpc_6, "192.168.100.118", 6379, TIME_OUT);
-    this.pool_7  = new JedisPool(this.jpc_7, "192.168.100.109", 6379, TIME_OUT);
+    this.pool_7  = new JedisPool(this.jpc_7, "192.168.100.102", 6379, TIME_OUT);
     this.pool_8  = new JedisPool(this.jpc_8, "192.168.100.110", 6379, TIME_OUT);
     this.pool_9  = new JedisPool(this.jpc_9, "192.168.100.111", 6379, TIME_OUT);
     this.pool_10 = new JedisPool(this.jpc_10, "192.168.100.119", 6379, TIME_OUT);
@@ -259,7 +262,6 @@ public class BioReducer extends Reducer<LongWritable, LongWritable, LongWritable
     for(int i=0;i<16;i++)
       this.scramble_order.add(new Integer(i));
 
-    System.out.println("hhwu FUCKING SETUP HERE!!!!");
   }
 
   @Override
@@ -294,6 +296,9 @@ public class BioReducer extends Reducer<LongWritable, LongWritable, LongWritable
 
     @Override
     public void reduce(LongWritable key, Iterable<LongWritable> values, Context context) throws IOException, InterruptedException {
+      //sLogger.info("One Reduce group key("+key.get()+"): "+decodePrefix(key.get(), NUM_PREFIX));
+      //sLogger.info("           get size now"+this.get_size);
+
       /*** initialize the jedis connections***/
       if(this.Redis_Connection){
         this.jedis0 = this.pool_0.getResource();
@@ -342,46 +347,7 @@ public class BioReducer extends Reducer<LongWritable, LongWritable, LongWritable
           reduce_group_size++;
         }
       }
-      //else if(isLargeGrain(key.get()) ){
-      //  /*** process the accumulated suffixes to preserve the order ***/
-      //  if(this.get_size > 0){
-      //    batchProcess(context, START_TO_SORT);
-      //    this.get_size = 0;
-      //  }
-
-
-      //  StringBuilder suffix_offset;
-
-      //  boolean multiple_get = false;
-      //  for(LongWritable value: values){
-      //    offset = (int)(value.get()%1000L);
-      //    mem_key = new Long((value.get()-offset)/1000L);
-      //    
-      //    dispatchKeyValuePair(mem_key, new Integer(offset));
-      //    
-      //    reduce_group_size++;
-      //    this.get_size++;
- 
-      //    if(this.get_size > GROUP_SIZE){
-      //      batchProcess(context, NOT_SORT_YET);
-      //      this.get_size = 0;
-      //      multiple_get = true;
-      //    }
-
-      //  }
-
-      //  //outlier of reduce group
-      //  //if(reduce_group_size > GROUP_SIZE)
-      //  //  sLogger.info("Key "+decodePrefix(key.get(), NUM_PREFIX)+"for Reduce group size: "+reduce_group_size);
-
-      //          
-      //  if(multiple_get){
-      //    batchProcess(context, START_TO_SORT);
-      //    this.get_size = 0;
-      //  }
-      //}
-      //else if(key.get()%78125L == 0){
-      else if(key.get()%WRITE_THROUGH_PREFIX == 0){
+      else if(key.get()%WRITE_THROUGH_PREFIX == 0L){
         /*** process the accumulated suffixes to preserve the order ***/
         if(this.get_size > 0){
           batchProcess(context, START_TO_SORT);
@@ -550,7 +516,7 @@ public class BioReducer extends Reducer<LongWritable, LongWritable, LongWritable
           case 2: buffer.insert(0,"C"); break;
           case 3: buffer.insert(0,"G"); break;
           case 4: buffer.insert(0,"T"); break;
-          default: break;
+          default: buffer.insert(0,"N"); break;
         }
 
         f_key -= digit;
@@ -562,7 +528,7 @@ public class BioReducer extends Reducer<LongWritable, LongWritable, LongWritable
         case 2: buffer.insert(0,"C"); break;
         case 3: buffer.insert(0,"G"); break;
         case 4: buffer.insert(0,"T"); break;
-        default: break;
+        default: buffer.insert(0,"N"); break;
       }
       buffer.append("$");
 
@@ -577,7 +543,6 @@ public class BioReducer extends Reducer<LongWritable, LongWritable, LongWritable
       String seqNo;
 
       SeqNoSuffixOffset element;
-      String decompressed_read;
 
       for(int j=0;j<bulkOfKeys.size();j++){
         element = new SeqNoSuffixOffset();
@@ -585,8 +550,7 @@ public class BioReducer extends Reducer<LongWritable, LongWritable, LongWritable
         element.offset = bulkOfOffsets.get(j).intValue();
 
         //sLogger.info("Fucking key: "+bulkOfKeys.get(j)+" offset: "+bulkOfOffsets.get(j).intValue()+"  value: "+bulkOfValues.get(j));
-        decompressed_read = decompressing(bulkOfValues.get(j));
-        StringBuilder buffer = new StringBuilder(decompressed_read.substring(element.offset%NUM_COMPRESS_CHARS));
+        StringBuilder buffer = new StringBuilder(bulkOfValues.get(j));
         buffer.append("$");
         element.suffix = buffer.toString();
 
@@ -707,7 +671,7 @@ public class BioReducer extends Reducer<LongWritable, LongWritable, LongWritable
       //  return true;
 
       //137G 23 chars
-      if(encodedPrefix%9765625L != 0L)
+      if(encodedPrefix%LARGE_GRAIN_THRESHOLD != 0L)
         return true;
       else
         return false;
@@ -722,15 +686,6 @@ public class BioReducer extends Reducer<LongWritable, LongWritable, LongWritable
 
       return jedis.mgetsuffix(keys.toArray(new String[0]), suffix_start);
       
-    }
-
-    private String decompressing(String seq){
-      StringBuilder decompressed_read = new StringBuilder();
-
-      for(int i=0;i< seq.length();i++)
-        decompressed_read.append(decodeChar((int)seq.charAt(i)));
-
-      return decompressed_read.toString();
     }
 
 
