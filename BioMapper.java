@@ -102,22 +102,22 @@ public class BioMapper extends Mapper<LongWritable, Text, LongWritable, LongWrit
 
 
   protected void cleanup(Context context) throws IOException, InterruptedException {
-    Jedis jedis0  = new Jedis("140.109.17.134", 6379, 300000);
-    Jedis jedis1  = new Jedis("192.168.100.122", 6379, 300000);
-    Jedis jedis2  = new Jedis("192.168.100.112", 6379, 300000);
-    Jedis jedis3  = new Jedis("192.168.100.105", 6379, 300000);
-    Jedis jedis4  = new Jedis("192.168.100.106", 6379, 300000);
-    Jedis jedis5  = new Jedis("192.168.100.107", 6379, 300000);
+    Jedis jedis0  = new Jedis("192.168.100.124", 6379, 300000);
+    Jedis jedis1  = new Jedis("192.168.100.123", 6379, 300000);
+    Jedis jedis2  = new Jedis("192.168.100.122", 6379, 300000);
+    Jedis jedis3  = new Jedis("192.168.100.121", 6379, 300000);
+    Jedis jedis4  = new Jedis("192.168.100.120", 6379, 300000);
+    Jedis jedis5  = new Jedis("192.168.100.119", 6379, 300000);
     Jedis jedis6  = new Jedis("192.168.100.118", 6379, 300000);
-    Jedis jedis7  = new Jedis("192.168.100.102", 6379, 300000);
-    Jedis jedis8  = new Jedis("192.168.100.110", 6379, 300000);
-    Jedis jedis9  = new Jedis("192.168.100.111", 6379, 300000);
-    Jedis jedis10 = new Jedis("192.168.100.119", 6379, 300000);
-    Jedis jedis11 = new Jedis("192.168.100.113", 6379, 300000);
-    Jedis jedis12 = new Jedis("192.168.100.121", 6379, 300000);
-    Jedis jedis13 = new Jedis("192.168.100.115", 6379, 300000);
-    Jedis jedis14 = new Jedis("192.168.100.116", 6379, 300000);
-    Jedis jedis15 = new Jedis("192.168.100.117", 6379, 300000);
+    Jedis jedis7  = new Jedis("192.168.100.117", 6379, 300000);
+    Jedis jedis8  = new Jedis("192.168.100.116", 6379, 300000);
+    Jedis jedis9  = new Jedis("192.168.100.115", 6379, 300000);
+    Jedis jedis10 = new Jedis("192.168.100.111", 6379, 300000);
+    Jedis jedis11 = new Jedis("192.168.100.107", 6379, 300000);
+    Jedis jedis12 = new Jedis("192.168.100.106", 6379, 300000);
+    Jedis jedis13 = new Jedis("192.168.100.105", 6379, 300000);
+    Jedis jedis14 = new Jedis("192.168.100.102", 6379, 300000);
+    Jedis jedis15 = new Jedis("140.109.17.134", 6379, 300000);
 
     jedis0.mset(bulkOfKeys_0.toArray(new String[0]));
     jedis1.mset(bulkOfKeys_1.toArray(new String[0]));
@@ -135,6 +135,27 @@ public class BioMapper extends Mapper<LongWritable, Text, LongWritable, LongWrit
     jedis13.mset(bulkOfKeys_13.toArray(new String[0]));
     jedis14.mset(bulkOfKeys_14.toArray(new String[0]));
     jedis15.mset(bulkOfKeys_15.toArray(new String[0]));
+
+    jedis0.close();
+    jedis1.close();
+    jedis2.close();
+    jedis3.close();
+    jedis4.close();
+    jedis5.close();
+    jedis6.close();
+    jedis7.close();
+    jedis8.close();
+    jedis9.close();
+    jedis10.close();
+    jedis11.close();
+    jedis12.close();
+    jedis13.close();
+    jedis14.close();
+    jedis15.close();
+
+
+
+
   }
 
 
@@ -159,6 +180,7 @@ public class BioMapper extends Mapper<LongWritable, Text, LongWritable, LongWrit
 
 
     switch(sel){
+      case 0:  bulkOfKeys_0.add(seqId); bulkOfKeys_0.add(result[1]);break;
       case 1:  bulkOfKeys_1.add(seqId); bulkOfKeys_1.add(result[1]);break;
       case 2:  bulkOfKeys_2.add(seqId); bulkOfKeys_2.add(result[1]);break;
       case 3:  bulkOfKeys_3.add(seqId); bulkOfKeys_3.add(result[1]);break;
@@ -174,7 +196,7 @@ public class BioMapper extends Mapper<LongWritable, Text, LongWritable, LongWrit
       case 13: bulkOfKeys_13.add(seqId); bulkOfKeys_13.add(result[1]);break;
       case 14: bulkOfKeys_14.add(seqId); bulkOfKeys_14.add(result[1]);break;
       case 15: bulkOfKeys_15.add(seqId); bulkOfKeys_15.add(result[1]);break;
-      default: bulkOfKeys_0.add(seqId); bulkOfKeys_0.add(result[1]);break;
+      default: bulkOfKeys_15.add(seqId); bulkOfKeys_15.add(result[1]);break;
     }
 
     
@@ -248,39 +270,60 @@ public class BioMapper extends Mapper<LongWritable, Text, LongWritable, LongWrit
     //if(encodedPrefix == 1169840494)
     //  return true;
 
-    //137G 13 chars
+
+    //64G 13 chars
+    if(encodedPrefix == 305175781L)
+      return true;
     if(encodedPrefix == 966389973L)
       return true;
-
-    if(encodedPrefix == 406901041L)
+    if(encodedPrefix == 1068115234L)
       return true;
-
-    if(encodedPrefix == 610351562L)
-      return true;
-
-    if(encodedPrefix == 1118977864L)
-      return true;
-
     if(encodedPrefix == 457763671L)
       return true;
-
     if(encodedPrefix == 356038411L)
       return true;
-
-    if(encodedPrefix == 813802083L)
-      return true;
-
     if(encodedPrefix == 559488932L)
       return true;
-
     if(encodedPrefix == 1220703124L)
       return true;
-
-    if(encodedPrefix == 712076822L)
-      return true;
-
     if(encodedPrefix == 1169840494L)
       return true;
+
+
+
+    //137G 13 chars
+    //if(encodedPrefix == 966389973L)
+    //  return true;
+
+    //if(encodedPrefix == 406901041L)
+    //  return true;
+
+    //if(encodedPrefix == 610351562L)
+    //  return true;
+
+    //if(encodedPrefix == 1118977864L)
+    //  return true;
+
+    //if(encodedPrefix == 457763671L)
+    //  return true;
+
+    //if(encodedPrefix == 356038411L)
+    //  return true;
+
+    //if(encodedPrefix == 813802083L)
+    //  return true;
+
+    //if(encodedPrefix == 559488932L)
+    //  return true;
+
+    //if(encodedPrefix == 1220703124L)
+    //  return true;
+
+    //if(encodedPrefix == 712076822L)
+    //  return true;
+
+    //if(encodedPrefix == 1169840494L)
+    //  return true;
 
 
     return false;

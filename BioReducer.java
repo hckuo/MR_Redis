@@ -198,22 +198,22 @@ public class BioReducer extends Reducer<LongWritable, LongWritable, LongWritable
     this.jpc_15.setMaxTotal(64);
 
 
-    this.pool_0  = new JedisPool(this.jpc_0, "140.109.17.134", 6379, TIME_OUT);
-    this.pool_1  = new JedisPool(this.jpc_1, "192.168.100.122", 6379, TIME_OUT);
-    this.pool_2  = new JedisPool(this.jpc_2, "192.168.100.112", 6379, TIME_OUT);
-    this.pool_3  = new JedisPool(this.jpc_3, "192.168.100.105", 6379, TIME_OUT);
-    this.pool_4  = new JedisPool(this.jpc_4, "192.168.100.106", 6379, TIME_OUT);
-    this.pool_5  = new JedisPool(this.jpc_5, "192.168.100.107", 6379, TIME_OUT);
+    this.pool_0  = new JedisPool(this.jpc_0, "192.168.100.124", 6379, TIME_OUT);
+    this.pool_1  = new JedisPool(this.jpc_1, "192.168.100.123", 6379, TIME_OUT);
+    this.pool_2  = new JedisPool(this.jpc_2, "192.168.100.122", 6379, TIME_OUT);
+    this.pool_3  = new JedisPool(this.jpc_3, "192.168.100.121", 6379, TIME_OUT);
+    this.pool_4  = new JedisPool(this.jpc_4, "192.168.100.120", 6379, TIME_OUT);
+    this.pool_5  = new JedisPool(this.jpc_5, "192.168.100.119", 6379, TIME_OUT);
     this.pool_6  = new JedisPool(this.jpc_6, "192.168.100.118", 6379, TIME_OUT);
-    this.pool_7  = new JedisPool(this.jpc_7, "192.168.100.102", 6379, TIME_OUT);
-    this.pool_8  = new JedisPool(this.jpc_8, "192.168.100.110", 6379, TIME_OUT);
-    this.pool_9  = new JedisPool(this.jpc_9, "192.168.100.111", 6379, TIME_OUT);
-    this.pool_10 = new JedisPool(this.jpc_10, "192.168.100.119", 6379, TIME_OUT);
-    this.pool_11 = new JedisPool(this.jpc_11, "192.168.100.113", 6379, TIME_OUT);
-    this.pool_12 = new JedisPool(this.jpc_12, "192.168.100.121", 6379, TIME_OUT);
-    this.pool_13 = new JedisPool(this.jpc_13, "192.168.100.115", 6379, TIME_OUT);
-    this.pool_14 = new JedisPool(this.jpc_14, "192.168.100.116", 6379, TIME_OUT);
-    this.pool_15 = new JedisPool(this.jpc_15, "192.168.100.117", 6379, TIME_OUT);
+    this.pool_7  = new JedisPool(this.jpc_7, "192.168.100.117", 6379, TIME_OUT);
+    this.pool_8  = new JedisPool(this.jpc_8, "192.168.100.116", 6379, TIME_OUT);
+    this.pool_9  = new JedisPool(this.jpc_9, "192.168.100.115", 6379, TIME_OUT);
+    this.pool_10 = new JedisPool(this.jpc_10, "192.168.100.111", 6379, TIME_OUT);
+    this.pool_11 = new JedisPool(this.jpc_11, "192.168.100.107", 6379, TIME_OUT);
+    this.pool_12 = new JedisPool(this.jpc_12, "192.168.100.106", 6379, TIME_OUT);
+    this.pool_13 = new JedisPool(this.jpc_13, "192.168.100.105", 6379, TIME_OUT);
+    this.pool_14 = new JedisPool(this.jpc_14, "192.168.100.102", 6379, TIME_OUT);
+    this.pool_15 = new JedisPool(this.jpc_15, "140.109.17.134", 6379, TIME_OUT);
 
 
 
@@ -359,12 +359,16 @@ public class BioReducer extends Reducer<LongWritable, LongWritable, LongWritable
         StringBuilder tmp_suffix_offset = new StringBuilder(decoded_prefix);;
         for(LongWritable value: values){
           offset = (int)(value.get()%1000L);
+
+          //append offset to the output
           tmp_suffix_offset.append(" ");
           tmp_suffix_offset.append(offset);
 
           this.seqNumber.set((value.get()-offset)/1000L);
-          //this.suffixOffset.set(tmp_suffix_offset.toString());
-          this.suffixOffset.set(String.valueOf(offset));
+
+          this.suffixOffset.set(tmp_suffix_offset.toString());
+          //this.suffixOffset.set(String.valueOf(offset));
+
           context.write(this.seqNumber, this.suffixOffset);
 
           tmp_suffix_offset.delete(decoded_prefix.length(), tmp_suffix_offset.length());
@@ -483,6 +487,7 @@ public class BioReducer extends Reducer<LongWritable, LongWritable, LongWritable
       int sel = (int)((f_key.longValue()/100L)%16L);
 
       switch(sel){
+        case 0:  this.bulkOfKeys_0.add(f_key.toString());  this.bulkOfOffsets_0.add(f_value); break;
         case 1:  this.bulkOfKeys_1.add(f_key.toString());  this.bulkOfOffsets_1.add(f_value); break;
         case 2:  this.bulkOfKeys_2.add(f_key.toString());  this.bulkOfOffsets_2.add(f_value); break;
         case 3:  this.bulkOfKeys_3.add(f_key.toString());  this.bulkOfOffsets_3.add(f_value); break;
@@ -498,7 +503,7 @@ public class BioReducer extends Reducer<LongWritable, LongWritable, LongWritable
         case 13: this.bulkOfKeys_13.add(f_key.toString()); this.bulkOfOffsets_13.add(f_value); break;
         case 14: this.bulkOfKeys_14.add(f_key.toString()); this.bulkOfOffsets_14.add(f_value); break;
         case 15: this.bulkOfKeys_15.add(f_key.toString()); this.bulkOfOffsets_15.add(f_value); break;
-        default: this.bulkOfKeys_0.add(f_key.toString());  this.bulkOfOffsets_0.add(f_value); break;
+        default: this.bulkOfKeys_15.add(f_key.toString());  this.bulkOfOffsets_15.add(f_value); break;
       }
 
     }
@@ -643,9 +648,9 @@ public class BioReducer extends Reducer<LongWritable, LongWritable, LongWritable
         //sLogger.info("Sorting time: "+(temp_endT-temp_startT)+" ms");
  
         for(SeqNoSuffixOffset item: this.sortedSuffix){
-          this.seqNumber.set(item.seqNo);
-          //this.suffixOffset.set(item.toString());
-          this.suffixOffset.set(String.valueOf(item.offset));
+          //this.seqNumber.set(item.seqNo);
+          this.suffixOffset.set(item.toString());
+          //this.suffixOffset.set(String.valueOf(item.offset));
           context.write(this.seqNumber, this.suffixOffset);
         }
           	
@@ -682,7 +687,8 @@ public class BioReducer extends Reducer<LongWritable, LongWritable, LongWritable
 
       long [] suffix_start = new long[keys.size()];
       for(int i=0;i<keys.size();i++)
-        suffix_start[i] = starts.get(i).longValue()/NUM_COMPRESS_CHARS;
+        suffix_start[i] = starts.get(i).longValue();
+        //suffix_start[i] = starts.get(i).longValue()/NUM_COMPRESS_CHARS;
 
       return jedis.mgetsuffix(keys.toArray(new String[0]), suffix_start);
       
